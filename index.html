@@ -137,13 +137,35 @@
   .sp .st { color: #7fa0d8; font-size: 10px; margin-top: 2px; }
   .sp .ds { color: #9a9a9a; font-size: 10px; line-height: 13px; margin-top: 1px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 
+  /* checklist */
+  .chk { flex: 0 0 auto; width: 13px; height: 13px; padding: 0; margin: 0 2px 0 0; cursor: pointer; position: relative;
+         background: #141414; border: 1px solid; border-color: #0a0a0a #555 #555 #0a0a0a; }
+  .chk.on::after { content: ""; position: absolute; left: 3px; top: 0; width: 4px; height: 8px;
+                   border: solid #5ce05c; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .chk:hover { border-color: #0a0a0a #8a8a8a #8a8a8a #0a0a0a; }
+  .member.done { border-color: #3e6b3e #111 #111 #3e6b3e; }
+  .member.done > .wh { background: #1f2a1f; }
+  .member .pl { padding: 3px 6px; font-size: 10px; color: #9a9a9a; border-bottom: 1px solid #151515; cursor: pointer;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 0 #000; }
+  .member .pl b { color: #e0e0e0; }
+  .member .pl.none b { color: #6a6a6a; font-style: italic; font-weight: normal; }
+  .role-sum { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .rchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; font-weight: bold; color: #c0c0c0; text-shadow: 1px 1px 0 #000;
+           background: #222; border: 1px solid; border-color: #444 #111 #111 #444; }
+  .rchip img { width: 14px; height: 14px; }
+  .rchip b { color: #e8e8e8; }
+  .rchip.full { border-color: #3e6b3e #111 #111 #3e6b3e; } .rchip.full b { color: #5ce05c; }
+  .vip li .vn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .vip li .vp { margin-left: auto; padding-left: 6px; color: #8a8a8a; font-weight: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+  .vip li.done .vn { color: #5ce05c; }
+
   /* VIP-style member list */
   .vip { list-style: none; margin: 0; padding: 2px 0; max-height: 132px; overflow-y: auto; }
   .vip li { display: flex; align-items: center; gap: 5px; padding: 1px 3px; cursor: pointer; color: #b8b8b8; font-weight: bold;
             letter-spacing: .3px; text-shadow: 1px 1px 0 #000; }
   .vip li img { width: 14px; height: 14px; object-fit: contain; }
   .vip li:hover { color: #fff; }
-  .vip li.on { color: #5ce05c; }
+  .vip li.on { color: #fff; background: #333; box-shadow: inset 2px 0 0 #e8e8e8; }
   .vip li .cnt { margin-left: auto; color: #8a8a8a; }
 
   /* backpack */
@@ -212,6 +234,7 @@
     </div>
     <div class="viewport">
       <div class="vp-title" id="vpTitle"></div>
+      <div class="role-sum" id="roleSum"></div>
       <div class="party-view" id="partyView"></div>
       <div class="vp-sub" id="status"></div>
     </div>
@@ -249,6 +272,7 @@
         <div class="groove"></div>
         <div class="kv">
           <label for="mName" data-t="name"></label><input type="text" id="mName" maxlength="24">
+          <label for="mPlayer" data-t="playerF"></label><input type="text" id="mPlayer" maxlength="24" data-tph="playerPh">
           <label for="mRole" data-t="role"></label><select id="mRole"></select>
           <label for="tier" data-t="tier"></label><select id="tier"></select>
           <label for="ench" data-t="enchant"></label><select id="ench"></select>
@@ -283,7 +307,7 @@ const T = {
   en: {
     untitledParty: "Untitled party", untitled: "Untitled", hint: "Click a member's slot, then pick an item from the backpack.",
     party: "Party", myParty: "My party", saved: "Saved", save: "Save", load: "Load", del: "Delete", new: "New", export: "Export", import: "Import",
-    members: (n, m) => `Members (${n}/${m})`, add: "Add", copy: "Copy", remove: "Remove", name: "Name", role: "Role", tier: "Tier", enchant: "Enchant",
+    members: (n, m) => `Members (${n}/${m})`, add: "Add", copy: "Copy", remove: "Remove", name: "Build", role: "Role", tier: "Tier", enchant: "Enchant",
     searchPh: "Search name or ID", clear: "Clear", none: "(none)",
     barSlots: (a, b) => `${a}/${b} slots`, barMembers: (a, b) => `${a}/${b} members`, tierBox: "Tier:", enchBox: "Ench:", abilities: "Abilities", removeMember: "Remove member",
     bpTitle: (m, s, t) => `Backpack: ${m}, ${s}${t}`, bpInfo: n => `${n} item(s). Hover for details, click to equip.`, noItems: "No items match.",
@@ -304,7 +328,11 @@ const T = {
     storageFail: "Could not write to browser storage.", clickChoose: "Click to choose",
     baseNote: "* base value, scales with item power", xNote: "X = value not in the game files", ip: "Item power",
     cd: "Cooldown", en: "Energy", rg: "Range", ct: "Cast",
-    player: n => `Player ${n}`, langSet: "Language: English.",
+    player: n => `Build ${n}`, langSet: "Language: English.",
+    playerF: "Player", playerPh: "Who plays it", unassigned: "Unassigned", ready: "Ready", markReady: "Mark as ready",
+    barReady: (a, b) => `${a}/${b} builds ready`, barAssigned: (a, b) => `${a}/${b} with a player`,
+    isReady: n => `${n} is ready.`, notReady: n => `${n} is no longer ready.`, assigned: (b, p) => `${p} plays ${b}.`, unassignedMsg: b => `${b} has no player.`,
+    allReady: "Every build is ready!",
     slots: { CAPE: "Cape", HEAD: "Head", BAG: "Bag", WEAPON: "Weapon", ARMOR: "Armor", OFF: "Off-hand", POTION: "Potion", SHOES: "Shoes", FOOD: "Food", MOUNT: "Mount" },
     groups: { Weapon: "Weapon", Chest: "Chest", Head: "Head", Shoes: "Shoes", Cape: "Cape" },
     roles: { Tank: "Tank", Healer: "Healer", DPS: "DPS", Support: "Support", Flex: "Flex" },
@@ -312,7 +340,7 @@ const T = {
   es: {
     untitledParty: "Grupo sin nombre", untitled: "Sin nombre", hint: "Haz clic en una casilla de un miembro y elige un objeto de la mochila.",
     party: "Grupo", myParty: "Mi grupo", saved: "Guardados", save: "Guardar", load: "Cargar", del: "Borrar", new: "Nuevo", export: "Exportar", import: "Importar",
-    members: (n, m) => `Miembros (${n}/${m})`, add: "Añadir", copy: "Copiar", remove: "Quitar", name: "Nombre", role: "Rol", tier: "Tier", enchant: "Encant.",
+    members: (n, m) => `Miembros (${n}/${m})`, add: "Añadir", copy: "Copiar", remove: "Quitar", name: "Build", role: "Rol", tier: "Tier", enchant: "Encant.",
     searchPh: "Buscar nombre o ID", clear: "Limpiar", none: "(ninguno)",
     barSlots: (a, b) => `${a}/${b} casillas`, barMembers: (a, b) => `${a}/${b} miembros`, tierBox: "Tier:", enchBox: "Enc:", abilities: "Habilidades", removeMember: "Quitar miembro",
     bpTitle: (m, s, t) => `Mochila: ${m}, ${s}${t}`, bpInfo: n => `${n} objeto(s). Pasa el cursor para ver detalles, clic para equipar.`, noItems: "Ningún objeto coincide.",
@@ -333,7 +361,11 @@ const T = {
     storageFail: "No se pudo guardar en el navegador.", clickChoose: "Clic para elegir",
     baseNote: "* valor base, escala con el poder de objeto", xNote: "X = valor no incluido en los archivos del juego", ip: "Poder de objeto",
     cd: "Recarga", en: "Energía", rg: "Alcance", ct: "Lanzamiento",
-    player: n => `Jugador ${n}`, langSet: "Idioma: español.",
+    player: n => `Build ${n}`, langSet: "Idioma: español.",
+    playerF: "Jugador", playerPh: "Quién la usa", unassigned: "Sin asignar", ready: "Lista", markReady: "Marcar como lista",
+    barReady: (a, b) => `${a}/${b} builds listas`, barAssigned: (a, b) => `${a}/${b} con jugador`,
+    isReady: n => `${n} está lista.`, notReady: n => `${n} ya no está lista.`, assigned: (b, p) => `${p} usa ${b}.`, unassignedMsg: b => `${b} no tiene jugador.`,
+    allReady: "¡Todas las builds están listas!",
     slots: { CAPE: "Capa", HEAD: "Cabeza", BAG: "Bolsa", WEAPON: "Arma", ARMOR: "Armadura", OFF: "Secundaria", POTION: "Poción", SHOES: "Zapatos", FOOD: "Comida", MOUNT: "Montura" },
     groups: { Weapon: "Arma", Chest: "Armadura", Head: "Cabeza", Shoes: "Zapatos", Cape: "Capa" },
     roles: { Tank: "Tanque", Healer: "Sanador", DPS: "DPS", Support: "Soporte", Flex: "Flexible" },
@@ -341,7 +373,7 @@ const T = {
   pt: {
     untitledParty: "Grupo sem nome", untitled: "Sem nome", hint: "Clique em um espaço de um membro e escolha um item da mochila.",
     party: "Grupo", myParty: "Meu grupo", saved: "Salvos", save: "Salvar", load: "Carregar", del: "Excluir", new: "Novo", export: "Exportar", import: "Importar",
-    members: (n, m) => `Membros (${n}/${m})`, add: "Adicionar", copy: "Copiar", remove: "Remover", name: "Nome", role: "Função", tier: "Tier", enchant: "Encant.",
+    members: (n, m) => `Membros (${n}/${m})`, add: "Adicionar", copy: "Copiar", remove: "Remover", name: "Build", role: "Função", tier: "Tier", enchant: "Encant.",
     searchPh: "Buscar nome ou ID", clear: "Limpar", none: "(nenhum)",
     barSlots: (a, b) => `${a}/${b} espaços`, barMembers: (a, b) => `${a}/${b} membros`, tierBox: "Tier:", enchBox: "Enc:", abilities: "Habilidades", removeMember: "Remover membro",
     bpTitle: (m, s, t) => `Mochila: ${m}, ${s}${t}`, bpInfo: n => `${n} item(ns). Passe o mouse para detalhes, clique para equipar.`, noItems: "Nenhum item encontrado.",
@@ -362,7 +394,11 @@ const T = {
     storageFail: "Não foi possível salvar no navegador.", clickChoose: "Clique para escolher",
     baseNote: "* valor base, escala com o poder do item", xNote: "X = valor não incluído nos arquivos do jogo", ip: "Poder do item",
     cd: "Recarga", en: "Energia", rg: "Alcance", ct: "Conjuração",
-    player: n => `Jogador ${n}`, langSet: "Idioma: português.",
+    player: n => `Build ${n}`, langSet: "Idioma: português.",
+    playerF: "Jogador", playerPh: "Quem usa", unassigned: "Sem jogador", ready: "Pronta", markReady: "Marcar como pronta",
+    barReady: (a, b) => `${a}/${b} builds prontas`, barAssigned: (a, b) => `${a}/${b} com jogador`,
+    isReady: n => `${n} está pronta.`, notReady: n => `${n} não está mais pronta.`, assigned: (b, p) => `${p} usa ${b}.`, unassignedMsg: b => `${b} está sem jogador.`,
+    allReady: "Todas as builds estão prontas!",
     slots: { CAPE: "Capa", HEAD: "Cabeça", BAG: "Bolsa", WEAPON: "Arma", ARMOR: "Armadura", OFF: "Secundária", POTION: "Poção", SHOES: "Sapatos", FOOD: "Comida", MOUNT: "Montaria" },
     groups: { Weapon: "Arma", Chest: "Armadura", Head: "Cabeça", Shoes: "Sapatos", Cape: "Capa" },
     roles: { Tank: "Tanque", Healer: "Curandeiro", DPS: "DPS", Support: "Suporte", Flex: "Flexível" },
@@ -452,7 +488,7 @@ function img(url, { prio = "low", lazy = true, cls = "" } = {}) {
   return `<img src="${url}" alt="" decoding="async" fetchpriority="${prio}"${lazy ? ' loading="lazy"' : ""}${cls ? ` class="${cls}"` : ""} onerror="imgFail(this)">`;
 }
 const abbr = name => name.split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-const newMember = (n, role = "DPS", tier = 6) => ({ name: n, role, tier, ench: 0, slots: {}, spells: {} });
+const newMember = (n, role = "DPS", tier = 6) => ({ name: n, player: "", done: false, role, tier, ench: 0, slots: {}, spells: {} });
 let party = { name: "", members: [newMember(t("player", 1))] };
 let mi = 0;            // active member index
 let active = "HEAD";   // active slot key
@@ -485,6 +521,8 @@ function sanitize(d, fallbackName) {
     REAL.forEach(s => { const v = x && x.slots && x.slots[s.key]; if (v && byId[v]) slots[s.key] = v; });
     return {
       name: String((x && x.name) || t("player", i + 1)).slice(0, 24),
+      player: String((x && x.player) || "").slice(0, 24),
+      done: !!(x && x.done),
       role: ROLES.includes(x && x.role) ? x.role : "DPS",
       tier: TIERS.includes(x && x.tier) ? x.tier : 6,
       ench: [0,1,2,3,4].includes(x && x.ench) ? x.ench : 0,
@@ -498,6 +536,21 @@ function sanitize(d, fallbackName) {
   if (d && typeof d.slots === "object")
     return fix({ name: String(d.name || fallbackName || "").slice(0, 40), members: [cleanMember({ ...d, name: t("player", 1) }, 0)] });
   return null;
+}
+
+// ---------- checklist ----------
+const chk = (i, on) => `<button class="chk ${on ? "on" : ""}" data-chk="${i}" title="${esc(t("markReady"))}" aria-pressed="${on}"></button>`;
+function toggleDone(i) {
+  const m = party.members[i]; m.done = !m.done;
+  renderParty(); renderVip();
+  if (m.done && party.members.every(x => x.done)) say("allReady", [], "c-green");
+  else say(m.done ? "isReady" : "notReady", [m.name], m.done ? "c-green" : "c-yellow");
+}
+function roleSummary() {
+  const by = {};
+  party.members.forEach(m => { (by[m.role] ||= { n: 0, d: 0 }); by[m.role].n++; if (m.done) by[m.role].d++; });
+  return ROLES.filter(r => by[r]).map(r =>
+    `<span class="rchip ${by[r].d === by[r].n ? "full" : ""}">${roleImg(r, "")}${esc(roleName(r))} <b>${by[r].d}/${by[r].n}</b></span>`).join("");
 }
 
 // ---------- rendering ----------
@@ -529,32 +582,36 @@ function renderParty() {
       return `<div class="ab slotbox c${col} ${a.g === "P" ? "pas" : ""} ${opts.length ? "" : "off"} ${on}" data-m="${i}" data-ab="${a.k}" ${sid ? `data-spell="${sid}"` : ""}>${inner}<span class="hk">${a.hk}</span></div>`;
     };
     const abil = ABIL_GROUPS.map(g => `<span class="abg" title="${esc(T[lang].groups[g])}">${esc(T[lang].groups[g])}</span>${ABIL.filter(a => a.grp === g).map(abCell).join("")}`).join("");
-    return `<div class="member ${i === mi ? "on" : ""}" style="--s:${many ? 50 : 64}px">
-      <div class="wh" data-pickm="${i}">${roleImg(m.role)}<span class="ttl">${esc(m.name)} <span class="rl">${esc(roleName(m.role))}</span></span>
+    return `<div class="member ${i === mi ? "on" : ""} ${m.done ? "done" : ""}" style="--s:${many ? 50 : 64}px">
+      <div class="wh" data-pickm="${i}">${chk(i, m.done)}${roleImg(m.role)}<span class="ttl">${esc(m.name)} <span class="rl">${esc(roleName(m.role))}</span></span>
         ${many ? `<button class="mini" title="${esc(t("removeMember"))}" data-rm="${i}">&times;</button>` : ""}</div>
+      <div class="pl ${m.player ? "" : "none"}" data-pickm="${i}">${t("playerF")}: <b>${esc(m.player || t("unassigned"))}</b></div>
       <div class="body">
         <div class="inv">${cells}</div>
         <div class="abtitle">${t("abilities")}</div>
         <div class="abil">${abil}</div>
       </div></div>`;
   }).join("");
-  const total = party.members.length * REAL.length;
-  const got = party.members.reduce((a, m) => a + filled(m), 0);
-  $("pgFill").style.width = (got / total * 100) + "%";
-  $("pgText").textContent = t("barSlots", got, total);
-  $("pmFill").style.width = (party.members.length / MAX_MEMBERS * 100) + "%";
-  $("pmText").textContent = t("barMembers", party.members.length, MAX_MEMBERS);
+  const n = party.members.length;
+  const ready = party.members.filter(m => m.done).length;
+  const withP = party.members.filter(m => (m.player || "").trim()).length;
+  $("pgFill").style.width = (ready / n * 100) + "%";
+  $("pgText").textContent = t("barReady", ready, n);
+  $("pmFill").style.width = (withP / n * 100) + "%";
+  $("pmText").textContent = t("barAssigned", withP, n);
+  $("roleSum").innerHTML = roleSummary();
 }
 
 function renderVip() {
   $("vipTitle").textContent = t("members", party.members.length, MAX_MEMBERS);
   $("vip").innerHTML = party.members.map((m, i) =>
-    `<li class="${i === mi ? "on" : ""}" data-pickm="${i}">${roleImg(m.role, "")}${esc(m.name)}</li>`).join("");
+    `<li class="${i === mi ? "on" : ""} ${m.done ? "done" : ""}" data-pickm="${i}">${chk(i, m.done)}${roleImg(m.role, "")}<span class="vn">${esc(m.name)}</span><span class="vp">${esc(m.player || "—")}</span></li>`).join("");
 }
 
 function renderMemberForm() {
   const m = M();
   $("mName").value = m.name;
+  $("mPlayer").value = m.player || "";
   $("mRole").innerHTML = ROLES.map(r => `<option value="${r}">${esc(roleName(r))}</option>`).join(""); $("mRole").value = m.role;
   $("tier").innerHTML = TIERS.map(x => `<option value="${x}">T${x}</option>`).join(""); $("tier").value = String(m.tier);
   $("ench").innerHTML = [0,1,2,3,4].map(e => `<option value="${e}">.${e}</option>`).join(""); $("ench").value = String(m.ench);
@@ -660,11 +717,12 @@ function equip(id) {
 
 $("partyView").addEventListener("click", e => {
   const rm = e.target.closest("[data-rm]"); if (rm) { e.stopPropagation(); return removeMember(Number(rm.dataset.rm)); }
+  const ck = e.target.closest("[data-chk]"); if (ck) { e.stopPropagation(); return toggleDone(Number(ck.dataset.chk)); }
   const ab = e.target.closest("[data-ab]"); if (ab) return selectAbility(Number(ab.dataset.m), ab.dataset.ab);
   const s = e.target.closest("[data-slot]"); if (s) return selectSlot(Number(s.dataset.m), s.dataset.slot);
   const h = e.target.closest("[data-pickm]"); if (h) selectMember(Number(h.dataset.pickm));
 });
-$("vip").addEventListener("click", e => { const h = e.target.closest("[data-pickm]"); if (h) selectMember(Number(h.dataset.pickm)); });
+$("vip").addEventListener("click", e => { const ck = e.target.closest("[data-chk]"); if (ck) return toggleDone(Number(ck.dataset.chk)); const h = e.target.closest("[data-pickm]"); if (h) selectMember(Number(h.dataset.pickm)); });
 $("bp").addEventListener("click", e => { const s = e.target.closest("[data-pick]"); if (s) equip(s.dataset.pick); });
 let searchT = 0;
 $("search").addEventListener("input", () => { clearTimeout(searchT); searchT = setTimeout(renderBackpack, 150); });
@@ -674,6 +732,8 @@ $("langs").addEventListener("click", e => { const b = e.target.closest("[data-la
 $("partyName").addEventListener("input", e => { party.name = e.target.value; $("vpTitle").textContent = party.name || t("untitledParty"); });
 
 $("mName").addEventListener("input", e => { M().name = e.target.value.slice(0, 24) || t("player", mi + 1); renderParty(); renderVip(); renderBackpack(); });
+$("mPlayer").addEventListener("input", e => { M().player = e.target.value.slice(0, 24); renderParty(); renderVip(); });
+$("mPlayer").addEventListener("change", e => { const m = M(); if (m.player.trim()) say("assigned", [m.name, m.player]); else say("unassignedMsg", [m.name], "c-yellow"); });
 $("mRole").addEventListener("change", e => { const m = M(); m.role = e.target.value; renderParty(); renderVip(); say("isNow", [m.name, () => roleName(m.role)]); });
 $("ench").addEventListener("change", e => { M().ench = Number(e.target.value); renderParty(); renderBackpack(); say("enchSet", [M().name, M().ench]); });
 $("tier").addEventListener("change", e => {
@@ -693,7 +753,7 @@ $("bAdd").addEventListener("click", () => {
 });
 $("bDup").addEventListener("click", () => {
   if (party.members.length >= MAX_MEMBERS) { say("maxMembers", [MAX_MEMBERS], "c-red"); return; }
-  const c = JSON.parse(JSON.stringify(M())); c.name = (c.name + t("copySuffix")).slice(0, 24);
+  const c = JSON.parse(JSON.stringify(M())); c.name = (c.name + t("copySuffix")).slice(0, 24); c.player = ""; c.done = false;
   party.members.splice(mi + 1, 0, c); mi++;
   renderAll(); say("joined", [c.name], "c-green");
 });
